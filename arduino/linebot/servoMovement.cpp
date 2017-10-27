@@ -1,13 +1,11 @@
+#include "config.h"
 #include "movements.h"
+#include <Arduino.h>
 
-void setup_movement(){
-  // Right servo
-  pinMode(servoRight_ena,OUTPUT);
-  pinMode(servoRightPin,OUTPUT);
-
-  // Left servo
-  pinMode(servoLeft_ena,OUTPUT);
-  pinMode(servoLeftPin,OUTPUT);
+void ServoSetup(){
+  pinMode(servoEnablePin,OUTPUT);
+  pinMode(servoRightPin,OUTPUT); // Right servo
+  pinMode(servoLeftPin,OUTPUT);  // Left servo
 }
 
 void ServoStop(){
@@ -16,18 +14,16 @@ void ServoStop(){
   analogWrite(servoLeftPin,0);
 
   // Disabling server power supplier
-  digitalWrite(servoRight_ena,LOW);
-  digitalWrite(servoLeft_ena,LOW);
+  digitalWrite(servoEnablePin,LOW);
 }
 
 
 // Level: the level over or below the
 // stop offset to set a forward or
 // backward movement
-void ServoMove(int8_t level){
+void ServoMove(char level){
   // Enabling servo power supplier
-  digitalWrite(servoRight_ena,HIGH);
-  digitalWrite(servoLeft_ena,HIGH);
+  digitalWrite(servoEnablePin,HIGH);
 
   // Using the stop offset to move
   // forward or backward

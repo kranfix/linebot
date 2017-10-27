@@ -10,7 +10,7 @@ void ServoStop();
 // Level: the level over or below the
 // stop offset to set a forward or
 // backward movement
-void ServoMove(int8_t level);
+void ServoMove(char level);
 
 
 /* DC motor function */
@@ -23,4 +23,4 @@ void DcStop();
 // Level: the level over or below the
 // stop offset to set a forward or
 // backward movement
-void DcMove(int8_t level);
+void DcMove(char level);
