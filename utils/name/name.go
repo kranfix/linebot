@@ -5,8 +5,8 @@ import (
   "time"
 )
 
-func generate(lbmId, lmrId int) string {
-  lb := fmt.Sprintf("%.3d:%.3d",lbmId,blrId)
+func Generate(lbmId, lbrId int) string {
+  lb := fmt.Sprintf("%.3d:%.3d",lbmId,lbrId)
   t := time.Now()
 
   year, month, day := t.Date()
@@ -16,4 +16,5 @@ func generate(lbmId, lmrId int) string {
   clk := fmt.Sprintf("%.2d:%.2d:%.2d",hour,minute,second)
 
   name := fmt.Sprintf("%s_%s_%s.png",lb,date,clk)
+  return name
 }
