@@ -7,11 +7,11 @@ import (
 
 func main() {
   h := serialUpload.Header{
-    [3]byte{'#','!','@'}, // Init
+    [...]byte{'#','!','@'}, // Init
+    uint8(100), // Len
     uint8(1),   // Src
     uint8(0),    // Dst
-    uint16(35), // DfNum
-    uint8(100), // Len
+    uint16(1025), // DfNum
   }
 
   fmt.Print(h)
