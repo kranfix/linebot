@@ -3,14 +3,15 @@ package main
 import (
   ".."
   "fmt"
-  "unsafe"
 )
 
 func main() {
+  var h serialUpload.Header
+
   // from byte array
   b := [...]byte{'!','@','#',5,1,0,50,1}
   fmt.Printf("array: % d\n",b)
-  h.ReadBytes(&b)
+  h.ReadBytes(&b[0])
   fmt.Println("From byte array to Header:")
   fmt.Println(h)
 
