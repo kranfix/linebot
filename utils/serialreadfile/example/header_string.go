@@ -2,7 +2,7 @@ package main
 
 import (
   "fmt"
-  ".."
+  "github.com/kranfix/linebot/utils/serialreadfile"
 )
 
 func main() {
