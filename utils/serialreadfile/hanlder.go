@@ -1,16 +1,20 @@
 package serialUpload
 
 import (
-  "os"
   "time"
   "github.com/tarm/serial"
 )
 
 type Handler struct  {
   Id byte
+  header Header
   Serial *serial.Port
-  File *os.File
-  Buf  []byte // temporal buffer
+  headerbuf  []byte // Buffer for  header
+  dtbuf []byte      // Buffer for dataframe
+  dtNum uint8
+  DtLen uint8
+  offset uint32
+  //incompletes []byte
 }
 
 func (h *Handler) SetSerial(port string, baud int, readTimeout time.Duration) (err error){
@@ -27,19 +31,14 @@ func (h *Handler) SetSerial(port string, baud int, readTimeout time.Duration) (e
   return nil
 }
 
-func (h *Handler) SetFile(name string) (err error){
-  if h.File != nil {
-    h.File.Close()
-  }
-  h.File, err = os.Create(name)
-  return err
-}
-
 func NewHandler(id byte) *Handler{
-  return &Handler{Id:id}
+  h := &Handler{Id:id}
+  h.headerbuf = make([]byte,HeaderSize)
+  h.dtbuf = make([]byte,256)
+  //h.incompletes = make([]byte,1000)
+  return h
 }
 
 func (h *Handler) Close() {
   h.Serial.Close()
-  h.File.Close()
 }

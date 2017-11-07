@@ -4,6 +4,8 @@ import (
   "fmt"
 )
 
+var HeaderSize = 8
+
 type Header struct {
   Init [3]byte
   Len uint8    // dataframe lenght
