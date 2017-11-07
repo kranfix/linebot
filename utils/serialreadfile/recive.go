@@ -12,6 +12,8 @@ func (h *Handler) RxMetadata() {
   fileSize += uint32(temp[1]) << 8
   fileSize += uint32(temp[2]) << 16
   fileSize += uint32(temp[3]) << 24
+
+  h.dtbuf = make([]byte,fileSize)
 }
 
 func (h *Handler) RxHeader() (n int, err error) {
@@ -34,7 +36,7 @@ func (h *Handler) RxHeader() (n int, err error) {
 
 func (h *Handler) RxDataframe() {
   h.offset += uint32(h.DtLen) * uint32(h.dtNum)
-  end := h.offset + uint32(h.h  eader.Len)
+  end := h.offset + uint32(h.header.Len)
 
   n,err := h.Rx(h.dtbuf[h.offset:end])
   if err != nil {

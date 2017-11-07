@@ -11,12 +11,4 @@ func main() {
   defer h.Close()
 
   h.SetSerial("/dev/ttyUSB0",38400, 2*time.Second)
-
-  h.SetFile("test1.txt")
-  buf := []byte("Hello everybody\n")
-  h.File.Write(buf)
-
-  h.SetFile("test2.txt")
-  buf = []byte("Hola a todos\n")
-  h.File.Write(buf)
 }
