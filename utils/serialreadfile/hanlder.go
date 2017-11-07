@@ -2,8 +2,7 @@ package serialUpload
 
 import (
   "os"
-  "fmt"
-  //"time"
+  "time"
   "github.com/tarm/serial"
 )
 
@@ -11,10 +10,10 @@ type Handler struct  {
   Id byte
   Serial *serial.Port
   File *os.File
-  temp  []byte // temporal buffer
+  Buf  []byte // temporal buffer
 }
 
-func (h *Handler) SetSerial(port string, baud int, readTimeout) (err error){
+func (h *Handler) SetSerial(port string, baud int, readTimeout time.Duration) (err error){
   c := &serial.Config{
     Name: port,
     Baud: baud,
@@ -28,14 +27,15 @@ func (h *Handler) SetSerial(port string, baud int, readTimeout) (err error){
   return nil
 }
 
-func (h *Handler) SetFile(name string) {
+func (h *Handler) SetFile(name string) (err error){
   if h.File != nil {
     h.File.Close()
   }
-  h.File = os.Create(name)
+  h.File, err = os.Create(name)
+  return err
 }
 
-func NewHandler(byte id) *Handler{
+func NewHandler(id byte) *Handler{
   return &Handler{Id:id}
 }
 
