@@ -17,3 +17,25 @@ func (h *Handler) Flush() {
     n,_ = h.Serial.Read(temp)
   }
 }
+
+/*
+RxTotal reads serial port till fill a buffer
+with a max tries if EOF is read.
+buf: Buffer of bytes
+max: maximun number of tries without reading a byte
+return: true if the reading was ok
+*/
+func (h *Handler) RxTotal(buf []byte, max int) bool {
+  tries := 0
+  N := len(buf)
+  for k := 0; k < N; k += n {
+    n,_ = h.Serial.Read(buf[k:])
+    if n == 0 {
+      tries++
+      if tries == max {
+        return false
+      }
+    }
+  }
+  return true
+}
