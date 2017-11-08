@@ -1,20 +1,12 @@
 package serialUpload
 
-import (
-  "fmt"
-)
-
-func (h *Handler) RxDataframe() {
+func (h *Handler) RxDataframe(tries int) bool {
   Len := uint32(h.header.Len)
   //fmt.Printf("%d\n",Len)
 
-  h.offset = uint32(h.DtLen) * uint32(h.header.DtNum-1)
+  off := uint32(h.DtLen) * uint32(h.header.DtNum-1) //offset
   end := h.offset + Len
-  s := h.dtbuf[h.offset:end]
+  s := h.dtbuf[off:end]
 
-  var n int
-  for N := uint32(0); N < Len; N += uint32(n) {
-    n,_ = h.Rx(s[N:])
-  }
-  return
+  return h.RxTotal(s,tries)
 }

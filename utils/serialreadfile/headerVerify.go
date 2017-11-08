@@ -4,7 +4,7 @@ var (
   HeadInit = [...]byte{'!','@','#'}
 )
 
-func (h *Header) Verify() bool {
+func (h *Header) IsOk() bool {
   for i, v := range h.Init {
     if v != HeadInit[i] {
       return false
@@ -13,5 +13,6 @@ func (h *Header) Verify() bool {
   if h.Len < uint8(4) {
     return false
   }
+  h.Len -= uint8(4)
   return true
 }

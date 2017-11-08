@@ -1,9 +1,5 @@
 package serialUpload
 
-import (
-  "fmt"
-)
-
 // returns true each time a good header is read
 func (h *Handler) RxHeader() bool {
   h.DetectInit()
@@ -23,20 +19,20 @@ func (h *Handler) RxHeader() bool {
   return true
 }
 
-func (h *Hanlder) DetectInit() {
-  b := h.HeaderSize[0:1]
-  N := len(h.init)
+func (h *Handler) DetectInit() {
+  b := h.headerbuf[0:1]
+  N := len(h.header.Init)
 
   for k := 0; k < N; {
     // Read till a incomming byte
-    for n := 0; n == 0 {
+    for n := 0; n == 0; {
       n,_ = h.Rx(b)
     }
 
     // going to the next detection
-    if b[0] == h.init[k] {
+    if b[0] == h.header.Init[k] {
       k++
-    } else if b[0] == h.init[0] {
+    } else if b[0] == h.header.Init[0] {
       k = 1
     }
   }

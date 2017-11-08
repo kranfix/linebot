@@ -26,6 +26,7 @@ max: maximun number of tries without reading a byte
 return: true if the reading was ok
 */
 func (h *Handler) RxTotal(buf []byte, max int) bool {
+  var n int
   tries := 0
   N := len(buf)
   for k := 0; k < N; k += n {
