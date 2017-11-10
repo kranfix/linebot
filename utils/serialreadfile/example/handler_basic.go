@@ -1,7 +1,7 @@
 package main
 
 import (
-  //"fmt"
+  "fmt"
   "time"
   su "github.com/kranfix/linebot/utils/serialreadfile"
 )
@@ -11,4 +11,7 @@ func main() {
   defer h.Close()
 
   h.SetSerial("/dev/ttyUSB0",38400, 2*time.Second)
+
+  fmt.Println("Header: ")
+  fmt.Println(h.Header())
 }

@@ -18,7 +18,7 @@ func main() {
 
 func test(h su.Header) {
   fmt.Println("-------------------------")
-  fmt.Println("Is The header ok? ",h.Verify())
+  fmt.Println("Is The header ok? ",h.IsOk())
   fmt.Print(h)
   fmt.Println("-------------------------")
 }
