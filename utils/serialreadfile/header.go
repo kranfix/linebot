@@ -15,7 +15,8 @@ type Header struct {
 }
 
 func (h Header) String() string {
-  str := "Lenght: %d\n"
+  str := fmt.Sprintf("Init: %s\n",h.Init)
+  str += "Lenght: %d\n"
   str += "src: %d\n"
   str += "dst: %d\n"
   str += "Dataframe Number: %d\n"

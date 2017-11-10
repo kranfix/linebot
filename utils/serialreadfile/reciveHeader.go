@@ -1,9 +1,13 @@
 package serialUpload
 
+import "fmt"
+
 // returns true each time a good header is read
 func (h *Handler) RxHeader() bool {
-  h.DetectInit()
-  h.RxTotal(h.headerbuf[3:],0)
+  //h.DetectInit()
+  b := h.WaitTillRxNonNull()
+  h.RxTotal(h.headerbuf[1:],100)
+  h.headerbuf[0] = b
   //fmt.Printf("% x ",h.headerbuf)
   //fmt.Printf("%d\n",h.header.DtNum)
 
@@ -15,7 +19,7 @@ func (h *Handler) RxHeader() bool {
 
   // updating the last dataframe number read
   h.DtNum = h.header.DtNum
-
+  fmt.Println(h.header)
   return true
 }
 

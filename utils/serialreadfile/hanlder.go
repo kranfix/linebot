@@ -1,7 +1,6 @@
 package serialUpload
 
 import (
-  "fmt"
   "time"
   "github.com/tarm/serial"
 )
@@ -14,7 +13,6 @@ type Handler struct  {
   dtbuf []byte      // Buffer for data
   DtLen uint8
   DtNum uint16
-  offset uint32
   //incompletes []byte
 }
 
@@ -28,7 +26,7 @@ func (h *Handler) SetSerial(port string, baud int, readTimeout time.Duration) (e
   return err
 }
 
-func NewHandler(id byte, init []byte) *Handler{
+func NewHandler(id byte) *Handler{
   h := &Handler{Id:id}
   h.headerbuf = make([]byte,HeaderSize)
   return h
@@ -40,23 +38,4 @@ func (h *Handler) Close() {
 
 func (h *Handler) Header() string {
   return h.header.String()
-}
-
-func (h *Handler) LastDf() {
-  offset := uint32(h.DtLen) * uint32(h.DtNum-1)
-  end := offset + uint32(h.DtLen)
-  fmt.Println("Offset: ",offset)
-  fmt.Println("End: ",end)
-
-  fmt.Println("\nLast read:")
-  s := h.dtbuf[offset-400:end]
-
-  for i := 0; i < 4; i++ {
-    k := 100 * i
-    for j := 0; j < 5; j++ {
-      k += 20 * j
-      fmt.Printf("% x\n",s[k:k+20])
-    }
-    fmt.Println()
-  }
 }
