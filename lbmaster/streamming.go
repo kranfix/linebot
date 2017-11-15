@@ -3,7 +3,7 @@ package main
 import(
   "fmt"
   "time"
-  su "github.com/kranfix/linebot/utils/serialreadfile"
+  su "github.com/kranfix/linebot/utils/serialCmd"
 )
 
 func check(e error) {
@@ -80,12 +80,12 @@ func main() {
     if !ok {
       continue
     }
-
-    //time.Sleep(time.Second)
-
+    err := h.Save()
+    if err != nil {
+      fmt.Println("saving File:\n",err)
+    }
+    //time.Sleep(2 * time.Millsecond)
   }
 
-  fmt.Println("\nSaving data")
-  h.Save("new.jpg")
-
+  fmt.Println("\nFile saved")
 }
