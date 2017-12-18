@@ -10,3 +10,6 @@
 // Ultrasonic sensor
 #define Trigger 6
 #define Echo    7
+
+// Encoder
+#define encoder 8

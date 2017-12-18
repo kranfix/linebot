@@ -29,6 +29,10 @@ void loop(){
         moveSet(MOVE_BACKWARD);
         Serial.write('b');
         break;
+      case 'A':
+        moveSet(MOVE_AUTO);
+        Serial.write('a');
+        break;
       default:
         Serial.write('d');
         break;
