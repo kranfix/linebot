@@ -12,4 +12,10 @@
 #define Echo    7
 
 // Encoder
-#define encoder 8
+#define Encoder  8
+#define Diameter 1.4 // cm
+#define Slots    40
+#define Distance 200 // cm
+
+// MQ2 - CO2
+#define Mq2 A2

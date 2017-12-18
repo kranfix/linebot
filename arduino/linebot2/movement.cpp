@@ -1,8 +1,13 @@
 #include "movement.h"
 #include <Arduino.h>
 
-int F, B, f, b, level;
-int status, lastStop = MOVE_STOP;
+int F, B, f, b, level, encoder;
+
+int mode = MOVE_STOP;
+int status = MOVE_STOP;
+int lastStop = MOVE_STOP;
+
+int encoderNow, encoderLast, encoderCount;
 
 void moveSetup(int _F, int _B, int _f, int _b, int detectionLevel){
   F = _F;
@@ -16,12 +21,20 @@ void moveSetup(int _F, int _B, int _f, int _b, int detectionLevel){
   pinMode(b,INPUT);
 }
 
+void encoderSetup(int _encoder){
+  encoder = _encoder;
+  pinMode(encoder,INPUT);
+  encoderNow = digitalRead(encoder);
+  encoderLast = encoderNow;
+  encoderCount = 0;
+}
+
 void moveForward(){
   int Fval = HIGH;
   int Bval = LOW;
+  status = MOVE_FORWARD;
   if(analogRead(f) >= level){
-    status = MOVE_STOP;
-    lastStop = MOVE_FORWARD;
+    moveSet(MOVE_STOP);
     Fval = LOW;
   }
   digitalWrite(F,Fval);
@@ -29,11 +42,11 @@ void moveForward(){
 }
 
 void moveBackward(){
+  status = MOVE_BACKWARD;
   int Fval = LOW;
-  int Bval = HIGH;
+  int Bval = HIGH;  
   if(analogRead(b) >= level){
-    status = MOVE_STOP;
-    lastStop = MOVE_BACKWARD;
+    moveSet(MOVE_STOP);
     Bval = LOW;
   }
   digitalWrite(F,Fval);
@@ -41,18 +54,28 @@ void moveBackward(){
 }
 
 void moveStop(){
+  status = MOVE_STOP;
   int Fval = LOW;
   int Bval = LOW;
   digitalWrite(F,Fval);
   digitalWrite(B,Bval);
 }
 
-void moveSet(int _status){
-  status = _status;
+void moveSet(int _mode){
+  mode = _mode;
+  if(mode != MOVE_AUTO){
+    status = mode;
+  }
+}
+
+void encoderSetForwardLimit(int N){
+  if(status == MOVE_FORWARD && encoderCount >= N){
+    moveSet(MOVE_STOP);
+  }
 }
 
 void moveLoop(){
-  switch(status){
+  switch(mode){
     case MOVE_STOP:
       moveStop();
       break;
@@ -66,6 +89,17 @@ void moveLoop(){
       moveAutomatic();
       break;
   }
+
+  // Encoder section
+  encoderNow = digitalRead(encoder);
+  if(encoderNow != encoderLast){
+    if(status == MOVE_FORWARD){
+      encoderCount++;
+    } else if (status == MOVE_BACKWARD){
+      encoderCount--;
+    }
+  }
+  encoderLast = encoderNow;
 }
 
 void moveAutomatic(){
@@ -78,6 +112,10 @@ void moveAutomatic(){
       moveBackward();
       break;
   }
-  status = MOVE_AUTO;
+  mode = MOVE_AUTO;
+}
+
+int encoderCounter(){
+  return encoderCount;
 }
 

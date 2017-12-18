@@ -14,6 +14,7 @@ _f: IR sensor Forward Pin
 _b: IR sensor Backward Pin
 */
 void moveSetup(int _F, int _B, int _f, int _b, int detectionLevel);
+void encoderSetup(int _encoder);
 
 // Movments
 void moveForward();
@@ -24,3 +25,6 @@ void moveAutomatic();
 // Usable in loop functions
 void moveSet(int _status);
 void moveLoop();
+int encoderCounter();
+
+void encoderSetForwardLimit(int N);
