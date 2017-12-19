@@ -53,7 +53,8 @@ void loop(){
   now = millis();
   if(now - start >= 500){
     start = now;
-    /*Serial.print("IR Forward: ");
+    /*Serial.println();
+    Serial.print("IR Forward: ");
     Serial.println(analogRead(IrForward));
     Serial.print("IR Backward: ");
     Serial.println(analogRead(IrBackward));*/

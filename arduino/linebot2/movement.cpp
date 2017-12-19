@@ -35,6 +35,7 @@ void moveForward(){
   status = MOVE_FORWARD;
   if(analogRead(f) >= level){
     moveSet(MOVE_STOP);
+    lastStop = MOVE_FORWARD;
     Fval = LOW;
   }
   digitalWrite(F,Fval);
@@ -46,6 +47,7 @@ void moveBackward(){
   int Fval = LOW;
   int Bval = HIGH;  
   if(analogRead(b) >= level){
+    lastStop = MOVE_BACKWARD;
     moveSet(MOVE_STOP);
     Bval = LOW;
   }
