@@ -14,14 +14,6 @@ var (
 )
 
 func main(){
-  opts := mqtt.NewClientOptions().AddBroker("tcp://190.90.6.43:1883").SetClientID("")
-	opts.SetKeepAlive(2 * time.Second)
-	opts.SetPingTimeout(3000 * time.Millisecond)
-
-  mqttClient := mqtt.NewClient(opts)
-	if token := mqttClient.Connect(); token.Wait() && token.Error() != nil {
-		panic(token.Error())
-	}
 
   ch := make(chan []byte)
 
@@ -34,7 +26,9 @@ func main(){
     }
   }
 
-  if token := mqttClient.Subscribe("lbm2", 0, controlLbm); token.Wait() && token.Error() != nil {
+  mqttClient := createMqttClient()
+  token := mqttClient.Subscribe("lbm2", 0, controlLbm)
+  if token.Wait() && token.Error() != nil {
 		fmt.Println(token.Error())
 	}
 
@@ -58,4 +52,17 @@ func sendCmd(ch chan []byte) {
       fmt.Println(err)
     }
   }
+}
+
+func createMqttClient() mqtt.Client {
+  opts := mqtt.NewClientOptions().AddBroker(broker).SetClientID("")
+	opts.SetKeepAlive(2 * time.Second)
+	opts.SetPingTimeout(3000 * time.Millisecond)
+
+  mqttClient := mqtt.NewClient(opts)
+	if token := mqttClient.Connect(); token.Wait() && token.Error() != nil {
+		panic(token.Error())
+	}
+
+  return mqttClient
 }
