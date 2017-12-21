@@ -18,6 +18,8 @@ func main(){
   flag.StringVar(&serialPort,"p", serialPort, "Serial port")
   flag.Parse()
 
+  fmt.Println("Waiting for MQTT command ...")
+
   ch := make(chan []byte)
 
   controlLbm := func(client mqtt.Client, msg mqtt.Message){
