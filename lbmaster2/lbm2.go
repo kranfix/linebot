@@ -2,6 +2,7 @@ package main
 
 import (
   "fmt"
+  "flag"
   "time"
   "github.com/tarm/serial"
   "github.com/eclipse/paho.mqtt.golang"
@@ -14,6 +15,8 @@ var (
 )
 
 func main(){
+  flag.StringVar(&serialPort,"p", serialPort, "Serial port")
+  flag.Parse()
 
   ch := make(chan []byte)
 
