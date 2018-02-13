@@ -28,3 +28,4 @@ void moveLoop();
 int encoderCounter();
 
 void encoderSetForwardLimit(int N);
+void encoderReset();

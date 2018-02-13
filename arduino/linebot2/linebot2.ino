@@ -20,27 +20,34 @@ void loop(){
   if(Serial.available() > 0){
     char c = Serial.read();
     switch (c) {
-      case 'S':
+      case 'S': // Stop
         moveSet(MOVE_STOP);
         Serial.write('s');
         break;
-      case 'F':
+      case 'F': // Forward
         moveSet(MOVE_FORWARD);
         N = 700.0 * Slots / (PI * Diameter);
         Serial.write('f');
         break;
-      case 'B':
+      case 'B': // Backward
         moveSet(MOVE_BACKWARD);
         Serial.write('b');
         break;
-      case 'A':
+      case 'A': // automatic along all the wire
         moveSet(MOVE_AUTO);
+        N = 700.0 * Slots / (PI * Diameter);
         Serial.write('a');
         break;
-      case 'X':
-        moveSet(MOVE_FORWARD);
+      case 'X': // Atumatic with limit
+        //moveSet(MOVE_FORWARD);
+        moveSet(MOVE_AUTO);
         N = Distance * Slots / (PI * Diameter);
         Serial.write('x');
+        break;
+      case 'R': // Reset
+        moveSet(MOVE_STOP);
+        encoderReset();
+        Serial.write('r');
         break;
       default:
         Serial.write('d');
@@ -70,5 +77,6 @@ void loop(){
     Serial.print(digitalRead(Encoder));
     Serial.print("  ");
     Serial.println(encoderCounter());
+    Serial.println();
   }
 }

@@ -2,6 +2,7 @@
 #include <Arduino.h>
 
 int F, B, f, b, level, encoder;
+int encoderLimit;
 
 int mode = MOVE_STOP;
 int status = MOVE_STOP;
@@ -50,6 +51,7 @@ void moveBackward(){
     lastStop = MOVE_BACKWARD;
     moveSet(MOVE_STOP);
     Bval = LOW;
+    encoderReset();
   }
   digitalWrite(F,Fval);
   digitalWrite(B,Bval);
@@ -71,12 +73,14 @@ void moveSet(int _mode){
 }
 
 void encoderSetForwardLimit(int N){
-  if(status == MOVE_FORWARD && encoderCount >= N){
-    moveSet(MOVE_STOP);
-  }
+  encoderLimit = N;
 }
 
 void moveLoop(){
+  if(status == MOVE_FORWARD && encoderCount >= encoderLimit){
+    lastStop = MOVE_FORWARD;
+  }
+
   switch(mode){
     case MOVE_STOP:
       moveStop();
@@ -121,3 +125,6 @@ int encoderCounter(){
   return encoderCount;
 }
 
+void encoderReset(){
+  encoderCount = 0;
+}
