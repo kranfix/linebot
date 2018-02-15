@@ -23,3 +23,6 @@
 
 // MQ2 - CO2
 #define Mq2 A0 //A2
+
+// Arduino 5V pin real voltage
+#define V5 4.6
