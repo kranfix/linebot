@@ -26,3 +26,13 @@
 
 // EEPROM
 #define RtcSetDir 0
+
+// Arduino 5V pin real voltage
+#define V5 4.6
+
+// Attachable Pin: 2 and 3 in Arduino Nano
+#define wakeRtcPin      2     // pin used for waking up
+#define wakeOnRtc       LOW
+
+#define wakeButtonPin   3     // pin used for waking up
+#define wakeOnButton    LOW

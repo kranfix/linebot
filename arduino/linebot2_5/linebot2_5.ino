@@ -1,6 +1,7 @@
 #include "config.h"
 #include "movement.h"
 #include "hcsr04.h"
+#include "sleep.h"
 #include <RTClibExtended.h>
 #include <EEPROM.h>
 
@@ -9,15 +10,14 @@ RTC_DS3231 RTC;
 hcsr04_t hc;
 
 void setup(){
-  Serial.begin(9600);
   moveSetup(MotorForward,MotorBackward,IrForward,IrBackward,DetectionLevel);
   encoderSetup(Encoder);
   hc = hcsr04_CreateAndBegin(Trigger,Echo);
 
-
   //Wire.begin();
   RTC.begin();
 #ifdef CLEAREEPROM
+  Serial.begin(9600);
   Serial.println("Iniciando borrado de ");
   for (int i = 0 ; i < EEPROM.length(); i++) {
     EEPROM.write(i, 0);
@@ -30,24 +30,6 @@ void setup(){
   if(EEPROM.read(RtcSetDir) == 0){
     RTC.adjust(DateTime(__DATE__, __TIME__));
     EEPROM.write(RtcSetDir, 1);
-    
-    /*for(int i = 0; i < 5; i++){
-      delay(1000);
-      DateTime now = RTC.now();
-    
-      Serial.print(now.year(), DEC);
-      Serial.print('/');
-      Serial.print(now.month(), DEC);
-      Serial.print('/');
-      Serial.print(now.day(), DEC);
-      Serial.print(' ');
-      Serial.print(now.hour(), DEC);
-      Serial.print(':');
-      Serial.print(now.minute(), DEC);
-      Serial.print(':');
-      Serial.print(now.second(), DEC);
-      Serial.println();
-    }*/
   }
 #endif
   
@@ -65,77 +47,97 @@ void setup(){
   RTC.writeSqwPinMode(DS3231_OFF);
 
   //Set alarm1 every day at 18:33
-  RTC.setAlarm(0xC, 30, 20, 18, 0);   //set your wake-up time here
+  RTC.setAlarm(0xE, 15, 20, 01, 0);   //set your wake-up time here
   RTC.alarmInterrupt(1, true);
   
   setupWakeUp();
-  
-  start = millis();
 }
 
 int N = 700.0 * Slots / (PI * Diameter);
+char c = 0;
 
 void loop(){
-  if(Serial.available() > 0){
-    char c = Serial.read();
-    switch (c) {
-      case 'S': // Stop
-        moveSet(MOVE_STOP);
-        Serial.write('s');
-        break;
-      case 'F': // Forward
-        moveSet(MOVE_FORWARD);
-        N = 700.0 * Slots / (PI * Diameter);
-        Serial.write('f');
-        break;
-      case 'B': // Backward
-        moveSet(MOVE_BACKWARD);
-        Serial.write('b');
-        break;
-      case 'A': // automatic along all the wire
-        moveSet(MOVE_AUTO);
-        N = 700.0 * Slots / (PI * Diameter);
-        Serial.write('a');
-        break;
-      case 'X': // Atumatic with limit
-        //moveSet(MOVE_FORWARD);
-        moveSet(MOVE_AUTO);
-        N = Distance * Slots / (PI * Diameter);
-        Serial.write('x');
-        break;
-      case 'R': // Reset
-        moveSet(MOVE_STOP);
-        encoderReset();
-        Serial.write('r');
-        break;
-      default:
-        Serial.write('d');
-        break;
-    }
+  if(!serialActived){
+    Serial.begin(9600);
+    serialActived = 1;
+    delay(10);
+    start = millis();
+  }
+  c = 0;
+  if(buttonPressed){
+    c = 'S';
+  } else if(Serial.available() > 0){
+    c = Serial.read();
+  }
+  
+  switch (c) {
+    case 0:
+      break;
+    case 'S': // Stop
+      moveSet(MOVE_STOP);
+      Serial.write('s');
+      initSleep = 1;
+      break;
+    case 'F': // Forward
+      moveSet(MOVE_FORWARD);
+      N = 700.0 * Slots / (PI * Diameter);
+      Serial.write('f');
+      break;
+    case 'B': // Backward
+      moveSet(MOVE_BACKWARD);
+      Serial.write('b');
+      break;
+    case 'A': // automatic along all the wire
+      moveSet(MOVE_AUTO);
+      N = 700.0 * Slots / (PI * Diameter);
+      Serial.write('a');
+      break;
+    case 'X': // Atumatic with limit
+      //moveSet(MOVE_FORWARD);
+      moveSet(MOVE_AUTO);
+      N = Distance * Slots / (PI * Diameter);
+      Serial.write('x');
+      break;
+    case 'R': // Reset
+      moveSet(MOVE_STOP);
+      encoderReset();
+      Serial.write('r');
+      break;
+    default:
+      Serial.write('d');
+      break;
   }
   encoderSetForwardLimit(N);
   moveLoop();
 
   now = millis();
-  if(now - start >= 500){
+  if(now - start >= 10000){
     start = now;
-    /*Serial.println();
-    Serial.print("IR Forward: ");
-    Serial.println(analogRead(IrForward));
-    Serial.print("IR Backward: ");
-    Serial.println(analogRead(IrBackward));*/
     
-    float d = hcsr04_loop(&hc);
-    Serial.print("HC-SR04:\t");
-    Serial.println(d);
+    float dist = hcsr04_loop(&hc);
+    float bat = analogRead(Mq2)*V5/1023;
+    Serial.print("{\"HC-SR04\": ");
+    Serial.print(dist);
+    Serial.print(",\"Bat\": " ); 
+    Serial.print(bat);
+    Serial.print(",\"Encoder\": ");
+    Serial.print( digitalRead(Encoder));
+    Serial.print(",\"Counter\": ");
+    Serial.print(encoderCounter());
+    Serial.println("}");
+    delay(10);
+  }
 
-    Serial.print("MQ2:\t\t");
-    Serial.println(analogRead(Mq2));
-
-    Serial.print("Encoder:\t");
-    Serial.print(digitalRead(Encoder));
-    Serial.print("  ");
-    Serial.println(encoderCounter());
-    Serial.println();
+  if(initSleep){
+    initSleep = 0;
+    lbActive = 0;
+    
+    Serial.end()
+    serialActived = 0;
+    
+    sleepNow();
+    RTC.armAlarm(1, false);
+    RTC.clearAlarm(1);
+    RTC.alarmInterrupt(1, true);
   }
 }
