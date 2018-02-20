@@ -1,6 +1,7 @@
 /* Linebot program estructure */
 #pragma once
 #include <stdint.h>
+#include <EEPROM.h>
 #include "encodermotor.h"
 
 // Linebot Transition type
@@ -10,7 +11,7 @@ enum class lbTrans : uint8_t {Nop, Sleep};
 typedef struct {
   Action  action; // Encoder-Motor action
   float   limit;
-  uint8_t top;   // Has the top more priority then encoder limit?
+  bool    top;   // Has the top more priority then encoder limit?
   lbTrans trans;
 } lbTask_t;
 
@@ -43,7 +44,15 @@ class LineBot {
 
     // Data Store
     void saveData();
-    void recoverData();
+    bool recoverData();
     void resetData();
 };
+
+typedef struct {
+  bool recover;
+  lbTask_t * lbt;
+  uint8_t index;
+  uint8_t len;
+  int encoderPosition;
+} lbStore_t;
 
