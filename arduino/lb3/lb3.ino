@@ -1,20 +1,25 @@
+// Project libries
 #include "config.h"
-#include "movement.h"
 #include "sleep.h"
+
 #include <RTClibExtended.h>
 #include <EEPROM.h>
 
 // ARIOT libraries
 #include <encodermotor.h>
 #include <hcsr04.h>
+//#include <tictoc.h>
+#include "linebot.h"
+#include "lbProcesses.h"
 
 unsigned long now, start;
+
 RTC_DS3231 RTC;
 HCSR04 hc(Trigger, Echo, 343e-4*1.2);
+EncoderMotor em(EncoderPin,Slots,Diameter/2,{MotorForward,MotorBackward});
+LineBot lb(&em,IrForward,IrBackward,IrDetectionLevel);
 
 void setup() {
-  moveSetup(MotorForward, MotorBackward, IrForward, IrBackward, DetectionLevel);
-  encoderSetup(Encoder);
 
   //Wire.begin();
   RTC.begin();
@@ -52,95 +57,87 @@ void setup() {
   RTC.setAlarm(0xE, 15, 20, 01, 0);   //set your wake-up time here
   RTC.alarmInterrupt(1, true);
 
+  Serial.begin(9600);
+  delay(10);
+  start = millis();
+  
   setupWakeUp();
 }
 
-int N = 700.0 * Slots / (PI * Diameter);
 char c = 0;
 
 int serialActived = 0;
 void loop() {
-  if (!serialActived) {
-    Serial.begin(9600);
-    serialActived = 1;
+  lb.processEvents();
+
+  // Async report task
+  now = millis();
+  if (now - start >= 10000) {
+    start = now;
+    float dist = hc.loop();
+    float bat = analogRead(batPin) * V5 / 1023;
+    Serial.print("{\"HC-SR04\": ");
+    Serial.print(dist);
+    Serial.print(",\"Bat\": " );
+    Serial.print(bat);
+    Serial.print(",\"Encoder\": ");
+    Serial.print( digitalRead(EncoderPin));
+    Serial.print(",\"Counter\": ");
+    Serial.print(em.getMeters());
+    Serial.println("}");
+    start = now;
     delay(10);
-    start = millis();
   }
+
   c = 0;
-  if (buttonPressed) {
-    c = 'S';
-  } else if (Serial.available() > 0) {
+  if (buttonPressed && Serial.available() > 0) {
     c = Serial.read();
   }
 
   switch (c) {
     case 0:
-      break;
     case 'S': // Stop
-      moveSet(MOVE_STOP);
+      lb.setTaskList(justSleep,1);
       Serial.write('s');
-      initSleep = 1;
       break;
     case 'F': // Forward
-      moveSet(MOVE_FORWARD);
-      N = 700.0 * Slots / (PI * Diameter);
+      lb.setTaskList(FTE,1);
       Serial.write('f');
       break;
     case 'B': // Backward
-      moveSet(MOVE_BACKWARD);
+      lb.setTaskList(BTE,1);
       Serial.write('b');
       break;
     case 'A': // automatic along all the wire
-      moveSet(MOVE_AUTO);
-      N = 700.0 * Slots / (PI * Diameter);
+      lb.setTaskList(simpleAutomatic,2);
       Serial.write('a');
       break;
     case 'X': // Atumatic with limit
-      //moveSet(MOVE_FORWARD);
-      moveSet(MOVE_AUTO);
-      N = Distance * Slots / (PI * Diameter);
+      lb.setTaskList(simpleMiddleAutomatic,2);
       Serial.write('x');
       break;
     case 'R': // Reset
-      moveSet(MOVE_STOP);
-      encoderReset();
+      lb.setTaskList(justSleep,1);
+      em.setEncoder(0);
       Serial.write('r');
       break;
     default:
       Serial.write('d');
       break;
   }
-  encoderSetForwardLimit(N);
-  moveLoop();
 
-  now = millis();
-  if (now - start >= 10000) {
-    start = now;
-
-    float dist = hc.loop();
-    float bat = analogRead(Mq2) * V5 / 1023;
-    Serial.print("{\"HC-SR04\": ");
-    Serial.print(dist);
-    Serial.print(",\"Bat\": " );
-    Serial.print(bat);
-    Serial.print(",\"Encoder\": ");
-    Serial.print( digitalRead(Encoder));
-    Serial.print(",\"Counter\": ");
-    Serial.print(encoderCounter());
-    Serial.println("}");
-    delay(10);
-  }
-
-  if (initSleep) {
-    initSleep = 0;
-    lbActive = 0;
-
+  bool initSleep = lb.execTask();
+  if (initSleep) { 
     Serial.end();
-    serialActived = 0;
-
+    delay(100);
     sleepNow();
     RTC.armAlarm(1, false);
     RTC.clearAlarm(1);
     RTC.alarmInterrupt(1, true);
+
+    lb.recoverData();
+    Serial.begin(9600);
+    delay(10);
+    start = millis();
   }
 }

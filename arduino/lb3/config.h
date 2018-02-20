@@ -1,31 +1,33 @@
 #include <Arduino.h>
 
-// Movement
-#define MotorForward      9 //11
-#define MotorBackward    10 //12
+// Line maximun meter
+#define LineMeterLong 30000.0 // cm
+
+/*************  Infrared Sensors ************/
 #define IrForward        A1 //A0
 #define IrBackward       A2 //A1
-#define DetectionLevel  410
+#define IrDetectionLevel  410
 
-// Ultrasonic sensor
+/************ Ultrasonic sensor *************/
 #define Trigger 6
 #define Echo    5 //7
 
+/************** Encoder-Motor ***************/
+// Motor
+#define MotorForward      9 //11
+#define MotorBackward    10 //12
+
 // Encoder
-#define Encoder  4 //8
-#define Diameter 1.4 // cm
-#define Slots    40
-#define Distance 200 // cm
-//#define Distance 400 // cm
-
-// MQ2 - CO2
-#define Mq2 A0 //A2
-
+#define EncoderPin    4   //8
+#define Diameter      1.4 // cm
+#define Slots        40
+#define Distance    200   // cm
+/************ Devices Activator *************/
+#define activatorPin LED_BUILTIN
+/********************************************/
 // Setting EEPROM memory
 //#define CLEAREEPROM
 
-// EEPROM
-#define RtcSetDir 0
 
 // Arduino 5V pin real voltage
 #define V5 4.6
@@ -36,3 +38,12 @@
 
 #define wakeButtonPin   3     // pin used for waking up
 #define wakeOnButton    LOW
+
+// Battery pin
+#define batPin    A0
+#define batLevel1  870 // 0-1023
+#define batLevel2  900 // 0-1023
+
+/********* Defulat LineBot Task List ********/
+#define defaultLbTask simpleAutomatic
+#define NumOfTask 2
