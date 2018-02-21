@@ -28,9 +28,7 @@ void setup() {
   RTC.adjust(DateTime(__DATE__, __TIME__));
   Serial.begin(9600);
   Serial.println("Iniciando borrado de ");
-  for (int i = 0 ; i < EEPROM.length(); i++) {
-    EEPROM.write(i, 0);
-  }
+  lb.resetData();
   delay(100);
   Serial.println("Limpiado de EEPROM terminado.");
   Serial.println("Reprogramar sin la constante CLEAREEPROM");
@@ -142,7 +140,7 @@ void loop() {
   }
 
   // Execution LineBot Task
-  //bool goToSleep = lb.execTask();
+  //bool goToSleep = lb.execTask(); 
   if(!lb.execTask()){
     return;
   }

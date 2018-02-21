@@ -85,7 +85,7 @@ bool LineBot::recoverData(){
   uint8_t N = sizeof(data);
   uint8_t *buf = (uint8_t*)(&data);
 
-  for(int i = 0; i < N; i++){
+  for(uint8_t i = 0; i < N; i++){
     buf[i] = EEPROM.read(i);    
   }
 
@@ -99,6 +99,10 @@ bool LineBot::recoverData(){
 }
 
 void LineBot::resetData(){
-  
+  uint8_t N = sizeof(lbStore_t);
+
+  for(uint8_t i = 0; i < N; i++){
+    EEPROM.write(i,0);    
+  }
 }
 
