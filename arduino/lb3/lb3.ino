@@ -49,7 +49,7 @@ void setup() {
   RTC.writeSqwPinMode(DS3231_OFF);
 
   //Set alarm1 every day at 18:33
-  RTC.setAlarm(0xE, 15, 20, 01, 0);   //set your wake-up time here
+  RTC.setAlarm(wakeUpFreq, 15, 20, 01, 0);   //set your wake-up time here
   RTC.alarmInterrupt(1, true);
 
   Serial.begin(9600);
@@ -60,9 +60,9 @@ void setup() {
   setupWakeUp();
 
   // Recover LineBot Data from EEPROM if necessary
-  if(!lb.recoverData()){
-    lb.setTaskList(defaultLbTask,NumOfTask); 
-  }
+  //if(!lb.recoverData()){
+    lb.setTaskList(defaultLbTask,NumOfTask);
+  //}
 
   asleeping = true;
 }
@@ -70,70 +70,77 @@ void setup() {
 char c = 0;
 void loop() {
   lb.processEvents();
-
+  float dist = hc.loop();
+  int batLevel = analogRead(batPin);
+  float batV = batLevel * V5 / 1023;
+  
   // Async report task
   now = millis();
   if (now - start >= 2000 || asleeping) {
     start = now;
-    float dist = hc.loop();
-    float bat = analogRead(batPin) * V5 / 1023;
-    Serial.print("{\"HC-SR04\": ");
+    Serial.print("{\"type\":\"lb3\",");
+    Serial.print("\"id\":");
+    Serial.print(ID);
+    Serial.print(",\"HC-SR04\": ");
+      Serial.print(dist);
+    Serial.print(",\"Bat\":[" );
+      Serial.print(batLevel);
+      Serial.print(",");
+      Serial.print(batV);
+      Serial.print("]");
+    Serial.print(",\"pos\":[");
+      Serial.print(digitalRead(EncoderPin));
+      Serial.print(",");
+      Serial.print(em.getEncoder());
+      Serial.print(",");
+      Serial.print(em.getLong());
+    Serial.print("],\"dist\":");
     Serial.print(dist);
-    Serial.print(",\"Bat\": " );
-    Serial.print(bat);
-    Serial.print(",\"Encoder\": ");
-    Serial.print(digitalRead(EncoderPin));
-    Serial.print(",\"Counter\"=: ");
-    Serial.print(em.getLong());
     Serial.println("}");
     start = now;
     delay(10);
   }
   asleeping = false;
-
-  c = 0;
-  if (buttonPressed && Serial.available() > 0) {
-    c = Serial.read();
+  
+  c = 'Z';
+  if(rtcPressed){
+    rtcPressed = false;
+  } else if(buttonPressed){
+    buttonPressed = false;
+    if(Serial.available() > 0){
+      c = Serial.read();
+    }
   }
 
   // Configuring linebot task list
   switch (c) {
     case 'S': // Stop
-      lb.setTaskList(justSleep,1);
-      Serial.write('s');
+      goto InitSleepNow;
       break;
     case 'F': // Forward
       lb.setTaskList(FTE,1);
-      Serial.write('f');
       break;
     case 'B': // Backward
       lb.setTaskList(BTE,1);
-      Serial.write('b');
       break;
     case 'A': // automatic along all the wire
       lb.setTaskList(simpleAutomatic,2);
-      Serial.write('a');
       break;
     case 'X': // Atumatic with limit
       lb.setTaskList(simpleMiddleAutomatic,2);
-      Serial.write('x');
       break;
     case 'R': // Reset
       lb.setTaskList(justSleep,1);
       em.setEncoder(0);
-      Serial.write('r');
-      break;
-    default:
-      Serial.write('d');
       break;
   }
 
   // Verifying risk of poweroff
   if(riskOfPoweroff){
-    if(analogRead(batPin) > batLevel2){
+    if(batLevel > batLevel2){
       riskOfPoweroff = false;
     }
-  } else if(analogRead(batPin) < batLevel1){
+  } else if(batLevel < batLevel1){
     lb.saveData();
     riskOfPoweroff = true;
     goto InitSleepNow;
@@ -146,8 +153,8 @@ void loop() {
   }
  
 InitSleepNow:
+  //return;
   digitalWrite(activatorPin,LOW);
-  Serial.end();
   delay(100);
   
   sleepNow();
@@ -156,9 +163,8 @@ InitSleepNow:
   RTC.clearAlarm(1);
   RTC.alarmInterrupt(1, true);
   
-  Serial.begin(9600);
   digitalWrite(activatorPin,HIGH);
-  delay(10);
+  delay(3);
   asleeping = true;
   start = millis();
 }
