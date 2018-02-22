@@ -4,6 +4,8 @@
 #include <EEPROM.h>
 #include "encodermotor.h"
 
+//#define LbDebug
+
 // Linebot Transition type
 enum class lbTrans : uint8_t {Nop, Sleep};
 
@@ -19,19 +21,19 @@ class LineBot {
     // Encoder-Motor
     EncoderMotor *em;
 
-    // Infrared sensors
-    uint8_t irFrontTop;
-    uint8_t irBackTop;
-    int irLevel;
-    uint8_t eventBack;  // bool
-    uint8_t eventFront; // bool
-
     // LineBot Task List
     lbTask_t *lbt;
     uint8_t index;
     uint8_t len;
 
   public:
+    // Infrared sensors
+    uint8_t irFrontTop;
+    uint8_t irBackTop;
+    int irLevel;
+    uint8_t eventBack;  // bool
+    uint8_t eventFront; // bool
+  
     LineBot(EncoderMotor *em, uint8_t frontTop, uint8_t backTop, int level);
 
     void processEvents();

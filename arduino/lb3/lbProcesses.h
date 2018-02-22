@@ -6,8 +6,9 @@ lbTask_t justSleep[1] = {
   {Action::Stop,           0, true, lbTrans::Sleep}
 };
 //-----------------------------------------------------------------------------------
-lbTask_t FTE[1] = { // Forward  with Tope    (high priority) and Encoder (low priority)
-  {Action::Forward, LineMeterLong*2, true, lbTrans::Sleep}
+lbTask_t FTE[2] = { // Forward  with Tope    (high priority) and Encoder (low priority)
+  {Action::Forward, LineMeterLong,  true, lbTrans::Sleep},
+  {Action::Stop,      LineMeterLong, false, lbTrans::Sleep}
 };
 //-----------------------------------------------------------------------------------
 lbTask_t FET[1] = { // Forward  with Encoder (high priority) and Tope    (low priority)

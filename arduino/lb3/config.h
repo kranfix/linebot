@@ -1,7 +1,10 @@
 #include <Arduino.h>
 
+// ID
+#define ID 1
+
 // Line maximun meter
-#define LineMeterLong 30000.0 // cm
+#define LineMeterLong 100.0 // cm
 
 /*************  Infrared Sensors ************/
 #define IrForward        A1 //A0
@@ -28,6 +31,8 @@
 // Setting EEPROM memory
 //#define CLEAREEPROM
 
+// Frecuencia de wake-up
+#define wakeUpFreq 0xE
 
 // Arduino 5V pin real voltage
 #define V5 4.6
@@ -41,8 +46,8 @@
 
 // Battery pin
 #define batPin    A0
-#define batLevel1  870 // 0-1023
-#define batLevel2  900 // 0-1023
+#define batLevel1  900 // 0-1023
+#define batLevel2  930 // 0-1023
 
 /********* Defulat LineBot Task List ********/
 #define defaultLbTask simpleAutomatic

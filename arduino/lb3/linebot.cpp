@@ -16,47 +16,72 @@ LineBot::LineBot(EncoderMotor *em, uint8_t frontTop, uint8_t backTop, int level)
 
 void LineBot::processEvents(){
   em->loop();
-  eventBack  = (analogRead(irBackTop)  >= irLevel);
-  eventFront = (analogRead(irFrontTop) >= irLevel);
+  int backLevel = analogRead(irBackTop);  
+  int frontLevel = analogRead(irFrontTop);
+  eventBack  = (backLevel >= irLevel);
+  eventFront = (frontLevel >= irLevel);
 }
 
 void LineBot::setTaskList(lbTask_t *lbt, uint8_t len){
   index = 0;
   this->lbt = lbt;
   this->len = len;
+#ifdef LbDebug
+  Serial.print("Secuencia: ");
+  Serial.print(index);
+  Serial.print("/");
+  Serial.println(len);
+#endif
 }
 
 bool LineBot::execTask(){
   lbTask_t *t = &lbt[index]; // current task
-  bool activateSleep = (t->trans == lbTrans::Sleep);
+  bool next = false;
 
-  Action act = em->getAction();
+  Action act = t->action;
+  em->setMotor(act,t->limit);
   if(act == Action::Stop){
     em->setLong(t->limit);
-    index++;
-  } else if(act == Action::Stop){
-    index++;
+    goto NextTask;
   } else {
     bool back  = (act == Action::Backward);
     bool front = (act == Action::Forward);
     bool irEvent = (eventFront & front) || (eventBack  & back);
   
     if(irEvent){
+#ifdef LbDebug
+      Serial.print("IR:(f,b)=(");
+      Serial.print(eventFront);
+      Serial.print(",");
+      Serial.print(eventBack);
+      Serial.println(")");
+#endif
       if(t->top){
-        index++; // Next task
+        goto NextTask;
       } else {
-        activateSleep = true; // Only a Pause
+        return true; // Only a Pause
       }
-    } else if(em->encoderEvent() && !t->top){
-      index++;  // Next task
+    } else if(em->event && !t->top){
+      goto NextTask;
     }
   }
 
+  // Continue without Sleep
+  return false;
+
   // module for index task if necessary
+  NextTask:
+  index++;
   if(index == len){
     index = 0;
   }
-  return activateSleep;
+#ifdef LbDebug
+  Serial.print("Secuencia: ");
+  Serial.print(index);
+  Serial.print("/");
+  Serial.println(len);
+#endif
+  return (t->trans == lbTrans::Sleep);
 }
 
 void LineBot::saveData(){
@@ -64,12 +89,12 @@ void LineBot::saveData(){
   lbStore_t data = {
     true, // EEPROM flag for recover
     lbt,index,len,
-    em->getEncoder()
+    em->encoderPosition
   };
   uint8_t N = sizeof(data);
   uint8_t *buf = (uint8_t*)(&data);
   
-  for(int i = 0; i < N; i++){
+  for(uint8_t i = 0; i < N; i++){
     EEPROM.write(i,buf[i]);    
   }
 }
@@ -77,12 +102,12 @@ void LineBot::saveData(){
 
 bool LineBot::recoverData(){
   if(lbt != NULL){
-    return;
+    return false;
   }
 
   // Reading saved data
   lbStore_t data;
-  uint8_t N = sizeof(data);
+  uint8_t N = sizeof(lbStore_t);
   uint8_t *buf = (uint8_t*)(&data);
 
   for(uint8_t i = 0; i < N; i++){
@@ -96,6 +121,7 @@ bool LineBot::recoverData(){
     len = data.len;
     em->setEncoder(data.encoderPosition);
   }
+  return true;
 }
 
 void LineBot::resetData(){

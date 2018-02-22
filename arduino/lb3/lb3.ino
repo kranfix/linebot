@@ -3,16 +3,15 @@
 #include "sleep.h"
 
 #include <RTClibExtended.h>
-#include <EEPROM.h>
 
 // ARIOT libraries
 #include <encodermotor.h>
 #include <hcsr04.h>
-//#include <tictoc.h>
+#include <tictoc.h>
 #include "linebot.h"
 #include "lbProcesses.h"
 
-unsigned long now, start;
+Tictoc tt(millis);
 
 RTC_DS3231 RTC;
 HCSR04 hc(Trigger, Echo, 343e-4*1.2);
@@ -54,7 +53,7 @@ void setup() {
 
   Serial.begin(9600);
   delay(10);
-  start = millis();
+  tt.tic();
   digitalWrite(activatorPin,HIGH);
   
   setupWakeUp();
@@ -68,16 +67,20 @@ void setup() {
 }
 
 char c = 0;
+int backLevel = 0;  
+int frontLevel = 0;
 void loop() {
   lb.processEvents();
-  float dist = hc.loop();
+  
+  //float dist = hc.loop();
+  float dist = 0;
   int batLevel = analogRead(batPin);
   float batV = batLevel * V5 / 1023;
   
   // Async report task
-  now = millis();
-  if (now - start >= 2000 || asleeping) {
-    start = now;
+  tt.tic();
+  if (tt.toc() >= 2000 || asleeping) {
+    tt.tic();
     Serial.print("{\"type\":\"lb3\",");
     Serial.print("\"id\":");
     Serial.print(ID);
@@ -87,38 +90,42 @@ void loop() {
       Serial.print(batLevel);
       Serial.print(",");
       Serial.print(batV);
-      Serial.print("]");
+      Serial.print("]"); 
     Serial.print(",\"pos\":[");
       Serial.print(digitalRead(EncoderPin));
       Serial.print(",");
-      Serial.print(em.getEncoder());
+      Serial.print(em.encoderPosition);
       Serial.print(",");
       Serial.print(em.getLong());
     Serial.print("],\"dist\":");
     Serial.print(dist);
     Serial.println("}");
-    start = now;
-    delay(10);
   }
   asleeping = false;
+
+  lb.processEvents();
   
-  c = 'Z';
+  c = 'x';
   if(rtcPressed){
     rtcPressed = false;
   } else if(buttonPressed){
     buttonPressed = false;
-    if(Serial.available() > 0){
-      c = Serial.read();
-    }
   }
+
+  if(Serial.available() > 0){
+    c = Serial.read();
+  }
+
+  lb.processEvents();
 
   // Configuring linebot task list
   switch (c) {
+    case 'R':
+      em.setEncoder(0);
     case 'S': // Stop
       goto InitSleepNow;
-      break;
     case 'F': // Forward
-      lb.setTaskList(FTE,1);
+      lb.setTaskList(FET,1);
       break;
     case 'B': // Backward
       lb.setTaskList(BTE,1);
@@ -129,11 +136,9 @@ void loop() {
     case 'X': // Atumatic with limit
       lb.setTaskList(simpleMiddleAutomatic,2);
       break;
-    case 'R': // Reset
-      lb.setTaskList(justSleep,1);
-      em.setEncoder(0);
-      break;
   }
+
+  lb.processEvents();
 
   // Verifying risk of poweroff
   if(riskOfPoweroff){
@@ -143,28 +148,27 @@ void loop() {
   } else if(batLevel < batLevel1){
     lb.saveData();
     riskOfPoweroff = true;
-    goto InitSleepNow;
   }
 
-  // Execution LineBot Task
-  //bool goToSleep = lb.execTask(); 
-  if(!lb.execTask()){
+  // Taking decision based on the risk of power off
+  if(!riskOfPoweroff && !lb.execTask()){
     return;
   }
- 
+  
 InitSleepNow:
   //return;
   digitalWrite(activatorPin,LOW);
+  em.setMotor(Action::Stop,0);
   delay(100);
   
   sleepNow();
-
+  
   RTC.armAlarm(1, false);
   RTC.clearAlarm(1);
   RTC.alarmInterrupt(1, true);
-  
+
   digitalWrite(activatorPin,HIGH);
   delay(3);
   asleeping = true;
-  start = millis();
+  tt.tic();
 }

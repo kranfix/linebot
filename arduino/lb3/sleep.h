@@ -4,17 +4,19 @@
 int wakeRtcInterrupt;
 int wakeButtonInterrupt;
 
+bool buttonPressed = false;
+bool rtcPressed = false;
 void wakeUpNow0(){
-  
+  rtcPressed = true;
 }
 
 void wakeUpNow1(){
-  
+  buttonPressed = true;
 }
 
 void setupWakeUp(){
   pinMode(wakeRtcPin, INPUT);
-  pinMode(wakeButtonPin, INPUT);
+  pinMode(wakeButtonPin, INPUT_PULLUP);
   wakeRtcInterrupt = digitalPinToInterrupt(wakeRtcPin);
   wakeButtonInterrupt = digitalPinToInterrupt(wakeButtonPin);
   attachInterrupt(wakeRtcInterrupt, wakeUpNow0, wakeOnRtc);
@@ -30,9 +32,8 @@ void sleepNow(){
 
   // use interrupt 0 (pin 2) and run function
   attachInterrupt(wakeRtcInterrupt, wakeUpNow0, wakeOnRtc); // wakeUpNow when pin 2 gets LOW
-  attachInterrupt(wakeButtonInterrupt, wakeUpNow1, wakeOnButton); 
-                                       
- 
+  attachInterrupt(wakeButtonInterrupt, wakeUpNow1, wakeOnButton);
+
   sleep_mode();            // here the device is actually put to sleep!!
                              // THE PROGRAM CONTINUES FROM HERE AFTER WAKING UP
  
