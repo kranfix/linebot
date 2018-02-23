@@ -11,7 +11,8 @@
 #include "linebot.h"
 #include "lbProcesses.h"
 
-Tictoc tt(millis);
+//Tictoc tt(millis);
+unsigned long start, now;
 
 RTC_DS3231 RTC;
 HCSR04 hc(Trigger, Echo, 343e-4*1.2);
@@ -53,7 +54,8 @@ void setup() {
 
   Serial.begin(9600);
   delay(10);
-  tt.tic();
+  //tt.tic();
+  start = millis();
   digitalWrite(activatorPin,HIGH);
   
   setupWakeUp();
@@ -78,9 +80,11 @@ void loop() {
   float batV = batLevel * V5 / 1023;
   
   // Async report task
-  tt.tic();
-  if (tt.toc() >= 2000 || asleeping) {
-    tt.tic();
+  //tt.tic();
+  now = millis();
+  if (now-start >= 5000 || asleeping) {
+    //tt.tic();
+    start = now;
     Serial.print("{\"type\":\"lb3\",");
     Serial.print("\"id\":");
     Serial.print(ID);
@@ -97,9 +101,7 @@ void loop() {
       Serial.print(em.encoderPosition);
       Serial.print(",");
       Serial.print(em.getLong());
-    Serial.print("],\"dist\":");
-    Serial.print(dist);
-    Serial.println("}");
+    Serial.println("]}");
   }
   asleeping = false;
 
@@ -120,6 +122,8 @@ void loop() {
 
   // Configuring linebot task list
   switch (c) {
+    case 'x':
+      break;
     case 'R':
       em.setEncoder(0);
     case 'S': // Stop
@@ -131,7 +135,7 @@ void loop() {
       lb.setTaskList(BTE,1);
       break;
     case 'A': // automatic along all the wire
-      lb.setTaskList(simpleAutomatic,2);
+      lb.setTaskList(defaultLbTask,NumOfTask);
       break;
     case 'X': // Atumatic with limit
       lb.setTaskList(simpleMiddleAutomatic,2);
@@ -156,9 +160,8 @@ void loop() {
   }
   
 InitSleepNow:
-  //return;
   digitalWrite(activatorPin,LOW);
-  em.setMotor(Action::Stop,0);
+  em.setMotor(Action::Stop,em.getLong());
   delay(100);
   
   sleepNow();
@@ -170,5 +173,6 @@ InitSleepNow:
   digitalWrite(activatorPin,HIGH);
   delay(3);
   asleeping = true;
-  tt.tic();
+  //tt.tic();
+  start = millis;
 }

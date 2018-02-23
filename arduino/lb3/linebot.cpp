@@ -36,19 +36,25 @@ void LineBot::setTaskList(lbTask_t *lbt, uint8_t len){
 
 bool LineBot::execTask(){
   lbTask_t *t = &lbt[index]; // current task
-  bool next = false;
-
   Action act = t->action;
   em->setMotor(act,t->limit);
+
+  bool back  = (act == Action::Backward);
+  bool front = (act == Action::Forward);
+  bool irEvent = (eventFront & front) || (eventBack  & back);
+  
   if(act == Action::Stop){
     em->setLong(t->limit);
+#ifdef LbDebug
+    Serial.print("Set:(int,Long)=(");
+    Serial.print(em->encoderPosition);
+    Serial.print(",");
+    Serial.print(em->getLong());
+    Serial.println(")");
+#endif
     goto NextTask;
-  } else {
-    bool back  = (act == Action::Backward);
-    bool front = (act == Action::Forward);
-    bool irEvent = (eventFront & front) || (eventBack  & back);
-  
-    if(irEvent){
+  } else if (!t->top) {
+    if (irEvent) {
 #ifdef LbDebug
       Serial.print("IR:(f,b)=(");
       Serial.print(eventFront);
@@ -56,14 +62,19 @@ bool LineBot::execTask(){
       Serial.print(eventBack);
       Serial.println(")");
 #endif
-      if(t->top){
-        goto NextTask;
-      } else {
-        return true; // Only a Pause
-      }
-    } else if(em->event && !t->top){
+      return true; // Only a Pause
+    } else if (em->event){
       goto NextTask;
     }
+  } else if(irEvent){ // && t->top == true
+#ifdef LbDebug
+    Serial.print("IR:(f,b)=(");
+    Serial.print(eventFront);
+    Serial.print(",");
+    Serial.print(eventBack);
+    Serial.println(")");
+#endif
+    goto NextTask;
   }
 
   // Continue without Sleep
@@ -72,15 +83,15 @@ bool LineBot::execTask(){
   // module for index task if necessary
   NextTask:
   index++;
-  if(index == len){
-    index = 0;
-  }
 #ifdef LbDebug
   Serial.print("Secuencia: ");
   Serial.print(index);
   Serial.print("/");
   Serial.println(len);
 #endif
+  if(index == len){
+    index = 0;
+  }
   return (t->trans == lbTrans::Sleep);
 }
 

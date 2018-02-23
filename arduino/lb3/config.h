@@ -4,7 +4,7 @@
 #define ID 1
 
 // Line maximun meter
-#define LineMeterLong 100.0 // cm
+#define LineMeterLong 700.0 // cm
 
 /*************  Infrared Sensors ************/
 #define IrForward        A1 //A0
@@ -32,7 +32,10 @@
 //#define CLEAREEPROM
 
 // Frecuencia de wake-up
-#define wakeUpFreq 0xE
+//#define wakeUpFreq 0x8 // Every Day (24 hours)
+#define wakeUpFreq 0xC // Every Hour
+//#define wakeUpFreq 0xE // Every Minute
+//define wakeUpFreq 0xF // Every Secong
 
 // Arduino 5V pin real voltage
 #define V5 4.6
@@ -50,5 +53,5 @@
 #define batLevel2  930 // 0-1023
 
 /********* Defulat LineBot Task List ********/
-#define defaultLbTask simpleAutomatic
-#define NumOfTask 2
+#define defaultLbTask cuyRutine
+#define NumOfTask 6
